@@ -7,7 +7,7 @@
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
-    html, body {margin:0;width:100%;height:100%;overflow:hidden;background:#000;touch-action:none;font-family:system-ui, -apple-system, BlinkMacSystemFont,"Segoe UI",sans-serif;}
+    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; touch-action:none; font-family: system-ui, -apple-system, BlinkMacSystemFont,"Segoe UI",sans-serif;}
     #overlay {position:fixed; inset:0; z-index:10; pointer-events:none; color:#fff;}
     #guide {position:absolute; left:12px; right:12px; bottom:calc(14px + env(safe-area-inset-bottom)); padding:10px 12px; border-radius:12px; background:rgba(0,0,0,.55); font-size:13px; line-height:1.55; text-shadow:0 1px 2px rgba(0,0,0,.7);}
     #status {position:absolute; top:calc(12px + env(safe-area-inset-top)); left:12px; padding:8px 10px; border-radius:999px; background:rgba(0,0,0,.55); font-size:12px;}
@@ -36,7 +36,7 @@
   <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
   <a-entity id="target" mindar-image-target="targetIndex:0">
-    <!-- 紙面に立たせる向きに修正 -->
+    <!-- modelRoot に X軸回転を追加して紙面に垂直に立たせる -->
     <a-entity id="modelRoot" position="0 0 0.08" rotation="-90 0 0" scale="0.42 0.42 0.42">
       <a-gltf-model id="castleModel" src="#castle-glb" position="0 -0.42 0" rotation="0 0 0"
                     material="transparent: true; opacity:1">
@@ -60,7 +60,7 @@ let lastTapTime=0;
 const normalScale=0.42;
 const zoomScale=normalScale*3;
 
-function setScale(value){ modelRoot.setAttribute('scale', `${value} ${value} ${value}`); }
+function setScale(value){ modelRoot.setAttribute('scale', `${value} ${value} ${value}`);}
 function updateRotation(){ modelRoot.setAttribute('rotation', `-90 ${rotationY} 0`); }
 
 target.addEventListener('targetFound', ()=>{ overlay.classList.add('found'); statusEl.textContent='マーカー認識中';});
@@ -72,7 +72,7 @@ window.addEventListener('touchstart', e=>{
   const now = Date.now();
   if(now - lastTapTime < 320){
     zoomed=!zoomed;
-    setScale(zoomed? zoomScale : normalScale);
+    setScale(zoomed? zoomScale:normalScale);
     lastTapTime=0;
     dragging=false;
     return;
@@ -87,7 +87,7 @@ window.addEventListener('touchmove', e=>{
   e.preventDefault();
   const x=e.touches[0].clientX;
   const dx=x-lastX;
-  rotationY -= dx*0.6; // 回転方向を添付状態に合わせ反転
+  rotationY += dx*0.6; // 回転方向を正しく設定
   updateRotation();
   lastX=x;
 },{passive:false});
@@ -95,15 +95,15 @@ window.addEventListener('touchmove', e=>{
 window.addEventListener('touchend', ()=>{dragging=false;});
 
 let mouseDown=false;
-window.addEventListener('mousedown', e=>{ mouseDown=true; lastX=e.clientX; });
+window.addEventListener('mousedown', e=>{mouseDown=true; lastX=e.clientX;});
 window.addEventListener('mousemove', e=>{
   if(!mouseDown) return;
   const dx=e.clientX-lastX;
-  rotationY -= dx*0.6;
+  rotationY += dx*0.6; // 横回転方向
   updateRotation();
   lastX=e.clientX;
 });
-window.addEventListener('mouseup', ()=>{ mouseDown=false; });
+window.addEventListener('mouseup', ()=>{mouseDown=false;});
 window.addEventListener('dblclick', ()=>{
   zoomed=!zoomed;
   setScale(zoomed? zoomScale:normalScale);
