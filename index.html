@@ -24,10 +24,6 @@
       inset: 0;
     }
 
-    /*
-      MindARが生成するカメラ映像を画面いっぱいに出す。
-      ここでvideoを一番下に敷く。
-    */
     video {
       position: fixed !important;
       top: 0 !important;
@@ -39,10 +35,6 @@
       background: transparent !important;
     }
 
-    /*
-      A-Frameのcanvasをカメラ映像の上に重ねる。
-      背景色は強制的に透明。
-    */
     a-scene {
       position: fixed !important;
       inset: 0 !important;
@@ -119,19 +111,6 @@
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity id="target" mindar-image-target="targetIndex: 0">
-
-      <!--
-        構造を分離する。
-
-        spinPivot：
-          紙面から立ち上がる方向、つまりZ軸まわりに回す。
-          これで「重力に逆らわない」回転にする。
-
-        standPivot：
-          GLBモデルを紙面から起こす専用。
-          以前の modelRoot rotation="-90 0 0" ではなく、
-          ここで rotation="90 0 0" にしている。
-      -->
       <a-entity id="modelRoot" position="0 0 0.08" rotation="0 0 0" scale="0.42 0.42 0.42">
         <a-entity id="spinPivot" position="0 0 0" rotation="0 0 0">
           <a-entity id="standPivot" position="0 0 0" rotation="90 0 0">
@@ -145,7 +124,6 @@
           </a-entity>
         </a-entity>
       </a-entity>
-
     </a-entity>
   </a-scene>
 
@@ -172,10 +150,6 @@
     }
 
     function updateRotation() {
-      /*
-        紙面から垂直に立った軸で回すため、Y軸ではなくZ軸を回す。
-        回転方向が逆なら、下の rotationZ の加算式だけを反転する。
-      */
       spinPivot.setAttribute('rotation', `0 0 ${rotationZ}`);
     }
 
@@ -243,13 +217,8 @@
       const x = e.touches[0].clientX;
       const dx = x - lastX;
 
-      /*
-        回転方向：
-        右スワイプで逆に感じる場合は、ここを
-        rotationZ += dx * 0.6;
-        に変更する。
-      */
-      rotationZ -= dx * 0.6;
+      /* 回転方向だけ反転 */
+      rotationZ += dx * 0.6;
 
       updateRotation();
       lastX = x;
@@ -263,9 +232,6 @@
       dragging = false;
     });
 
-    /*
-      PC確認用：マウスドラッグでも同じ方向に回す
-    */
     let mouseDown = false;
 
     window.addEventListener('mousedown', (e) => {
@@ -278,10 +244,8 @@
 
       const dx = e.clientX - lastX;
 
-      /*
-        スマホのtouchmoveと同じ回転方向。
-      */
-      rotationZ -= dx * 0.6;
+      /* 回転方向だけ反転 */
+      rotationZ += dx * 0.6;
 
       updateRotation();
       lastX = e.clientX;
