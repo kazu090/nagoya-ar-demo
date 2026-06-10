@@ -7,11 +7,11 @@
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
-    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; touch-action:none; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;}
+    html, body {margin:0;width:100%;height:100%;overflow:hidden;background:#000;touch-action:none;font-family:system-ui, -apple-system, BlinkMacSystemFont,"Segoe UI",sans-serif;}
     #overlay {position:fixed; inset:0; z-index:10; pointer-events:none; color:#fff;}
     #guide {position:absolute; left:12px; right:12px; bottom:calc(14px + env(safe-area-inset-bottom)); padding:10px 12px; border-radius:12px; background:rgba(0,0,0,.55); font-size:13px; line-height:1.55; text-shadow:0 1px 2px rgba(0,0,0,.7);}
     #status {position:absolute; top:calc(12px + env(safe-area-inset-top)); left:12px; padding:8px 10px; border-radius:999px; background:rgba(0,0,0,.55); font-size:12px;}
-    .found #status { background: rgba(0,120,40,.72);}
+    .found #status {background: rgba(0,120,40,.72);}
   </style>
 </head>
 <body>
@@ -30,14 +30,14 @@
   loading-screen="enabled: false"
 >
   <a-assets timeout="20000">
-    <a-asset-item id="castle-glb" src="./assets/nagoya_castle_stamp_lowpoly_mono.glb"></a-asset-item>
+    <a-asset-item id="castle-glb" src="./assets/nagoya_castle_stamp_lowpoly_mono(3).glb"></a-asset-item>
   </a-assets>
 
   <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
   <a-entity id="target" mindar-image-target="targetIndex:0">
-    <!-- modelRoot を紙面に垂直に立たせ、Y軸回転だけで自然に回る -->
-    <a-entity id="modelRoot" position="0 0 0.08" rotation="0 0 0" scale="0.42 0.42 0.42">
+    <!-- 紙面に立たせる向きに修正 -->
+    <a-entity id="modelRoot" position="0 0 0.08" rotation="-90 0 0" scale="0.42 0.42 0.42">
       <a-gltf-model id="castleModel" src="#castle-glb" position="0 -0.42 0" rotation="0 0 0"
                     material="transparent: true; opacity:1">
       </a-gltf-model>
@@ -52,71 +52,67 @@ const target = document.getElementById('target');
 const modelRoot = document.getElementById('modelRoot');
 const castleModel = document.getElementById('castleModel');
 
-let rotationY = 0;
-let lastX = 0;
-let dragging = false;
-let zoomed = false;
-let lastTapTime = 0;
-const normalScale = 0.42;
-const zoomScale = normalScale*3;
+let rotationY=0;
+let lastX=0;
+let dragging=false;
+let zoomed=false;
+let lastTapTime=0;
+const normalScale=0.42;
+const zoomScale=normalScale*3;
 
-function setScale(value){ modelRoot.setAttribute('scale', `${value} ${value} ${value}`);}
-function updateRotation(){ modelRoot.setAttribute('rotation', `0 ${rotationY} 0`);}
+function setScale(value){ modelRoot.setAttribute('scale', `${value} ${value} ${value}`); }
+function updateRotation(){ modelRoot.setAttribute('rotation', `-90 ${rotationY} 0`); }
 
-// マーカー検知
 target.addEventListener('targetFound', ()=>{ overlay.classList.add('found'); statusEl.textContent='マーカー認識中';});
 target.addEventListener('targetLost', ()=>{ overlay.classList.remove('found'); statusEl.textContent='マーカーを探しています';});
 
-// タッチ操作：横スワイプ回転 + ダブルタップズーム
 window.addEventListener('touchstart', e=>{
   if(e.touches.length!==1) return;
   e.preventDefault();
   const now = Date.now();
   if(now - lastTapTime < 320){
-    zoomed = !zoomed;
-    setScale(zoomed? zoomScale:normalScale);
+    zoomed=!zoomed;
+    setScale(zoomed? zoomScale : normalScale);
     lastTapTime=0;
     dragging=false;
     return;
   }
-  lastTapTime = now;
-  lastX = e.touches[0].clientX;
-  dragging = true;
+  lastTapTime=now;
+  lastX=e.touches[0].clientX;
+  dragging=true;
 },{passive:false});
 
 window.addEventListener('touchmove', e=>{
   if(!dragging||e.touches.length!==1) return;
   e.preventDefault();
-  const x = e.touches[0].clientX;
-  const dx = x-lastX;
-  rotationY += dx*0.6; // Y軸回転で自然に横回転
+  const x=e.touches[0].clientX;
+  const dx=x-lastX;
+  rotationY -= dx*0.6; // 回転方向を添付状態に合わせ反転
   updateRotation();
-  lastX = x;
+  lastX=x;
 },{passive:false});
 
 window.addEventListener('touchend', ()=>{dragging=false;});
 
-// PCマウス操作も対応
 let mouseDown=false;
-window.addEventListener('mousedown', e=>{mouseDown=true; lastX=e.clientX;});
+window.addEventListener('mousedown', e=>{ mouseDown=true; lastX=e.clientX; });
 window.addEventListener('mousemove', e=>{
   if(!mouseDown) return;
   const dx=e.clientX-lastX;
-  rotationY += dx*0.6; // 横回転
+  rotationY -= dx*0.6;
   updateRotation();
   lastX=e.clientX;
 });
-window.addEventListener('mouseup', ()=>{mouseDown=false;});
+window.addEventListener('mouseup', ()=>{ mouseDown=false; });
 window.addEventListener('dblclick', ()=>{
-  zoomed = !zoomed;
+  zoomed=!zoomed;
   setScale(zoomed? zoomScale:normalScale);
 });
 
-// モデル読み込み後に透過化
 castleModel.addEventListener('model-loaded', ()=>{
   castleModel.object3D.traverse(node=>{
     if(node.isMesh){
-      node.material.transparent = true;
+      node.material.transparent=true;
       node.material.opacity=1.0;
     }
   });
