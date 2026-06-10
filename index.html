@@ -1,122 +1,312 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>名古屋城ハンコARデモ</title>
+
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
   <style>
-    html, body { margin:0;width:100%;height:100%;overflow:hidden;background:#000; touch-action:none; font-family: system-ui, -apple-system, BlinkMacSystemFont,"Segoe UI",sans-serif; }
-    #overlay { position:fixed; inset:0; z-index:10; pointer-events:none; color:#fff; }
-    #guide { position:absolute; left:12px; right:12px; bottom:calc(14px + env(safe-area-inset-bottom)); padding:10px 12px; border-radius:12px; background:rgba(0,0,0,.55); font-size:13px; line-height:1.55; text-shadow:0 1px 2px rgba(0,0,0,.7);}
-    #status { position:absolute; top:calc(12px + env(safe-area-inset-top)); left:12px; padding:8px 10px; border-radius:999px; background:rgba(0,0,0,.55); font-size:12px;}
-    .found #status { background: rgba(0,120,40,.72);}
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent !important;
+      touch-action: none;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    /*
+      MindARが生成するカメラ映像を画面いっぱいに出す。
+      ここでvideoを一番下に敷く。
+    */
+    video {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+      background: transparent !important;
+    }
+
+    /*
+      A-Frameのcanvasをカメラ映像の上に重ねる。
+      背景色は強制的に透明。
+    */
+    a-scene {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 1 !important;
+      background: transparent !important;
+    }
+
+    canvas,
+    .a-canvas {
+      background: transparent !important;
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      color: #fff;
+    }
+
+    #guide {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.55);
+      font-size: 13px;
+      line-height: 1.55;
+      text-shadow: 0 1px 2px rgba(0,0,0,.7);
+    }
+
+    #status {
+      position: absolute;
+      top: calc(12px + env(safe-area-inset-top));
+      left: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.55);
+      font-size: 12px;
+    }
+
+    .found #status {
+      background: rgba(0, 120, 40, .72);
+    }
   </style>
 </head>
+
 <body>
-<div id="overlay">
-  <div id="status">マーカーを探しています</div>
-  <div id="guide">名古屋城のハンコ画像をカメラに映してください。<br>横スワイプ：3Dモデル回転 ／ ダブルタップ：3倍ズーム・元に戻す</div>
-</div>
+  <div id="overlay">
+    <div id="status">マーカーを探しています</div>
+    <div id="guide">
+      名古屋城のハンコ画像をカメラに映してください。<br>
+      横スワイプ：3Dモデル回転 ／ ダブルタップ：3倍ズーム・元に戻す
+    </div>
+  </div>
 
-<a-scene
-  mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta:0.01;"
-  embedded
-  renderer="alpha: true; antialias: true; colorManagement: true"
-  background="color: transparent"
-  vr-mode-ui="enabled: false"
-  device-orientation-permission-ui="enabled: false"
-  loading-screen="enabled: false"
->
-  <a-assets timeout="20000">
-    <a-asset-item id="castle-glb" src="./assets/nagoya_castle_stamp_lowpoly_mono(3).glb"></a-asset-item>
-  </a-assets>
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.0001; filterBeta: 0.01; warmupTolerance: 5; missTolerance: 8;"
+    color-space="sRGB"
+    renderer="alpha: true; antialias: true; colorManagement: true; physicallyCorrectLights: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    loading-screen="enabled: false"
+    embedded
+  >
+    <a-assets timeout="20000">
+      <a-asset-item id="castle-glb" src="./assets/nagoya_castle_stamp_lowpoly_mono.glb"></a-asset-item>
+    </a-assets>
 
-  <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <a-entity id="target" mindar-image-target="targetIndex:0">
-    <!-- 紙面に垂直に立つよう回転を調整 -->
-    <a-entity id="modelRoot" position="0 0 0.08" rotation="-90 0 180" scale="0.42 0.42 0.42">
-      <a-gltf-model id="castleModel" src="#castle-glb" position="0 -0.42 0" rotation="0 0 0"
-                    material="transparent: true; opacity:1">
-      </a-gltf-model>
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+
+      <!--
+        構造を分離する。
+
+        spinPivot：
+          紙面から立ち上がる方向、つまりZ軸まわりに回す。
+          これで「重力に逆らわない」回転にする。
+
+        standPivot：
+          GLBモデルを紙面から起こす専用。
+          以前の modelRoot rotation="-90 0 0" ではなく、
+          ここで rotation="90 0 0" にしている。
+      -->
+      <a-entity id="modelRoot" position="0 0 0.08" rotation="0 0 0" scale="0.42 0.42 0.42">
+        <a-entity id="spinPivot" position="0 0 0" rotation="0 0 0">
+          <a-entity id="standPivot" position="0 0 0" rotation="90 0 0">
+            <a-gltf-model
+              id="castleModel"
+              src="#castle-glb"
+              position="0 -0.42 0"
+              rotation="0 0 0"
+              material="transparent: true; opacity: 1"
+            ></a-gltf-model>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+
     </a-entity>
-  </a-entity>
-</a-scene>
+  </a-scene>
 
-<script>
-const overlay = document.getElementById('overlay');
-const statusEl = document.getElementById('status');
-const target = document.getElementById('target');
-const modelRoot = document.getElementById('modelRoot');
-const castleModel = document.getElementById('castleModel');
+  <script>
+    const overlay = document.getElementById('overlay');
+    const statusEl = document.getElementById('status');
+    const target = document.getElementById('target');
+    const modelRoot = document.getElementById('modelRoot');
+    const spinPivot = document.getElementById('spinPivot');
+    const castleModel = document.getElementById('castleModel');
+    const sceneEl = document.querySelector('a-scene');
 
-let rotationY=0;
-let lastX=0;
-let dragging=false;
-let zoomed=false;
-let lastTapTime=0;
-const normalScale=0.42;
-const zoomScale=normalScale*3;
+    let rotationZ = 0;
+    let lastX = 0;
+    let dragging = false;
+    let zoomed = false;
+    let lastTapTime = 0;
 
-function setScale(value){ modelRoot.setAttribute('scale', `${value} ${value} ${value}`); }
-function updateRotation(){ modelRoot.setAttribute('rotation', `-90 ${rotationY} 180`); }
+    const normalScale = 0.42;
+    const zoomScale = normalScale * 3;
 
-target.addEventListener('targetFound', ()=>{ overlay.classList.add('found'); statusEl.textContent='マーカー認識中';});
-target.addEventListener('targetLost', ()=>{ overlay.classList.remove('found'); statusEl.textContent='マーカーを探しています';});
-
-window.addEventListener('touchstart', e=>{
-  if(e.touches.length!==1) return;
-  e.preventDefault();
-  const now = Date.now();
-  if(now - lastTapTime < 320){
-    zoomed=!zoomed;
-    setScale(zoomed? zoomScale:normalScale);
-    lastTapTime=0;
-    dragging=false;
-    return;
-  }
-  lastTapTime=now;
-  lastX=e.touches[0].clientX;
-  dragging=true;
-},{passive:false});
-
-window.addEventListener('touchmove', e=>{
-  if(!dragging||e.touches.length!==1) return;
-  e.preventDefault();
-  const x=e.touches[0].clientX;
-  const dx=x-lastX;
-  rotationY += dx*0.6; // 横スワイプ方向に合わせる
-  updateRotation();
-  lastX=x;
-},{passive:false});
-
-window.addEventListener('touchend', ()=>{dragging=false;});
-
-let mouseDown=false;
-window.addEventListener('mousedown', e=>{mouseDown=true; lastX=e.clientX;});
-window.addEventListener('mousemove', e=>{
-  if(!mouseDown) return;
-  const dx=e.clientX-lastX;
-  rotationY += dx*0.6;
-  updateRotation();
-  lastX=e.clientX;
-});
-window.addEventListener('mouseup', ()=>{mouseDown=false;});
-window.addEventListener('dblclick', ()=>{
-  zoomed=!zoomed;
-  setScale(zoomed? zoomScale:normalScale);
-});
-
-castleModel.addEventListener('model-loaded', ()=>{
-  castleModel.object3D.traverse(node=>{
-    if(node.isMesh){
-      node.material.transparent=true;
-      node.material.opacity=1.0;
+    function setScale(value) {
+      modelRoot.setAttribute('scale', `${value} ${value} ${value}`);
     }
-  });
-});
-</script>
+
+    function updateRotation() {
+      /*
+        紙面から垂直に立った軸で回すため、Y軸ではなくZ軸を回す。
+        回転方向が逆なら、下の rotationZ の加算式だけを反転する。
+      */
+      spinPivot.setAttribute('rotation', `0 0 ${rotationZ}`);
+    }
+
+    function forceTransparentRenderer() {
+      if (!sceneEl || !sceneEl.renderer) return;
+
+      sceneEl.object3D.background = null;
+      sceneEl.renderer.setClearColor(0x000000, 0);
+      sceneEl.renderer.autoClear = true;
+
+      const canvas = sceneEl.renderer.domElement;
+      if (canvas) {
+        canvas.style.background = 'transparent';
+      }
+    }
+
+    sceneEl.addEventListener('loaded', () => {
+      forceTransparentRenderer();
+    });
+
+    sceneEl.addEventListener('renderstart', () => {
+      forceTransparentRenderer();
+    });
+
+    window.addEventListener('load', () => {
+      setTimeout(forceTransparentRenderer, 500);
+      setTimeout(forceTransparentRenderer, 1500);
+      setTimeout(forceTransparentRenderer, 3000);
+    });
+
+    target.addEventListener('targetFound', () => {
+      overlay.classList.add('found');
+      statusEl.textContent = 'マーカー認識中';
+      forceTransparentRenderer();
+    });
+
+    target.addEventListener('targetLost', () => {
+      overlay.classList.remove('found');
+      statusEl.textContent = 'マーカーを探しています';
+    });
+
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+
+      const now = Date.now();
+
+      if (now - lastTapTime < 320) {
+        zoomed = !zoomed;
+        setScale(zoomed ? zoomScale : normalScale);
+        lastTapTime = 0;
+        dragging = false;
+        return;
+      }
+
+      lastTapTime = now;
+      lastX = e.touches[0].clientX;
+      dragging = true;
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!dragging || e.touches.length !== 1) return;
+      e.preventDefault();
+
+      const x = e.touches[0].clientX;
+      const dx = x - lastX;
+
+      /*
+        回転方向：
+        右スワイプで逆に感じる場合は、ここを
+        rotationZ += dx * 0.6;
+        に変更する。
+      */
+      rotationZ -= dx * 0.6;
+
+      updateRotation();
+      lastX = x;
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => {
+      dragging = false;
+    });
+
+    window.addEventListener('touchcancel', () => {
+      dragging = false;
+    });
+
+    /*
+      PC確認用：マウスドラッグでも同じ方向に回す
+    */
+    let mouseDown = false;
+
+    window.addEventListener('mousedown', (e) => {
+      mouseDown = true;
+      lastX = e.clientX;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!mouseDown) return;
+
+      const dx = e.clientX - lastX;
+
+      /*
+        スマホのtouchmoveと同じ回転方向。
+      */
+      rotationZ -= dx * 0.6;
+
+      updateRotation();
+      lastX = e.clientX;
+    });
+
+    window.addEventListener('mouseup', () => {
+      mouseDown = false;
+    });
+
+    window.addEventListener('dblclick', () => {
+      zoomed = !zoomed;
+      setScale(zoomed ? zoomScale : normalScale);
+    });
+
+    castleModel.addEventListener('model-loaded', () => {
+      castleModel.object3D.traverse((node) => {
+        if (node.isMesh && node.material) {
+          node.material.transparent = true;
+          node.material.opacity = 1.0;
+          node.material.needsUpdate = true;
+        }
+      });
+
+      forceTransparentRenderer();
+    });
+  </script>
 </body>
 </html>
