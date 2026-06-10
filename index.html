@@ -54,7 +54,7 @@
   </div>
 
   <a-scene
-    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta:0.01;"
+    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.0001; filterBeta: 0.01;"
     embedded
     renderer="alpha: true; antialias: true; colorManagement: true"
     background="color: transparent"
@@ -69,7 +69,7 @@
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity id="target" mindar-image-target="targetIndex: 0">
-      <!-- 紙面に立たせ、初期回転挙動を維持 -->
+      <!-- モデルを紙面に立たせつつ回転方向は初期挙動を維持 -->
       <a-entity id="modelRoot" position="0 0 0.08" rotation="0 0 0" scale="0.42 0.42 0.42">
         <a-gltf-model id="castleModel" src="#castle-glb" position="0 -0.42 0" rotation="0 0 0"
                       material="transparent: true; opacity:1">
@@ -98,7 +98,7 @@
     }
 
     function updateRotation() {
-      // 初期の自然なY軸回転を維持
+      // 初期の自然な横回転を維持
       modelRoot.setAttribute('rotation', `0 ${rotationY} 0`);
     }
 
@@ -112,7 +112,6 @@
       statusEl.textContent = 'マーカーを探しています';
     });
 
-    // タッチ操作：横スワイプ回転 + ダブルタップズーム
     window.addEventListener('touchstart', e => {
       if (e.touches.length !== 1) return;
       e.preventDefault();
@@ -134,20 +133,21 @@
       e.preventDefault();
       const x = e.touches[0].clientX;
       const dx = x - lastX;
-      rotationY += dx * 0.6;
+      // 回転方向を添付状態の向きに合わせて反転（必要に応じマイナスを調整）
+      rotationY -= dx * 0.6;
       updateRotation();
       lastX = x;
     }, { passive: false });
 
     window.addEventListener('touchend', () => { dragging = false; });
 
-    // PCマウス操作も可能
+    // PC用マウス操作も対応
     let mouseDown = false;
     window.addEventListener('mousedown', e => { mouseDown = true; lastX = e.clientX; });
     window.addEventListener('mousemove', e => {
       if (!mouseDown) return;
       const dx = e.clientX - lastX;
-      rotationY += dx * 0.6;
+      rotationY -= dx * 0.6; // 回転方向を反転
       updateRotation();
       lastX = e.clientX;
     });
@@ -157,7 +157,7 @@
       setScale(zoomed ? zoomScale : normalScale);
     });
 
-    // GLB読み込み後に透過化
+    // モデル読み込み後に透過化
     castleModel.addEventListener('model-loaded', () => {
       castleModel.object3D.traverse(node => {
         if (node.isMesh) {
