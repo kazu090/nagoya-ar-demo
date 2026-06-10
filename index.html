@@ -63,18 +63,16 @@
     background="color: transparent"
     embedded
   >
-
     <a-assets timeout="20000">
       <a-asset-item id="castle-glb" src="./assets/nagoya_castle_stamp_lowpoly_mono(2).glb"></a-asset-item>
     </a-assets>
 
-    <!-- カメラ映像を背景として自動描画 -->
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity id="target" mindar-image-target="targetIndex: 0">
       <a-entity id="modelRoot" position="0 0 0.08" rotation="0 0 0" scale="0.42 0.42 0.42">
         <a-gltf-model id="castleModel" src="#castle-glb" position="0 -0.42 0" rotation="0 0 0"
-                      material="transparent: true; opacity: 1">
+                      material="transparent: true; opacity:1">
         </a-gltf-model>
       </a-entity>
     </a-entity>
@@ -142,7 +140,7 @@
       dragging = false;
     });
 
-    // PC用マウスドラッグ操作
+    // PC用マウス操作
     let mouseDown = false;
     window.addEventListener('mousedown', (e) => { mouseDown = true; lastX = e.clientX; });
     window.addEventListener('mousemove', (e) => {
@@ -158,7 +156,7 @@
       setScale(zoomed ? zoomScale : normalScale);
     });
 
-    // GLBの背景透過対応（モデル読み込み後にマテリアル透明化）
+    // GLBの背景透過化（モデル読み込み後にマテリアルを透明化）
     const castleModel = document.getElementById('castleModel');
     castleModel.addEventListener('model-loaded', () => {
       castleModel.object3D.traverse(node => {
