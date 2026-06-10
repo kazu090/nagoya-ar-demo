@@ -111,7 +111,7 @@
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity id="target" mindar-image-target="targetIndex: 0">
-      <a-entity id="modelRoot" position="0 0 0.08" rotation="0 0 0" scale="0.42 0.42 0.42">
+      <a-entity id="modelRoot" position="0 0 0.08" rotation="0 0 0" scale="0.63 0.63 0.63">
         <a-entity id="spinPivot" position="0 0 0" rotation="0 0 0">
           <a-entity id="standPivot" position="0 0 0" rotation="90 0 0">
             <a-gltf-model
@@ -142,7 +142,11 @@
     let zoomed = false;
     let lastTapTime = 0;
 
-    const normalScale = 0.42;
+    /*
+      以前の 0.42 の1.5倍。
+      0.42 × 1.5 = 0.63
+    */
+    const normalScale = 0.63;
     const zoomScale = normalScale * 3;
 
     function setScale(value) {
@@ -217,8 +221,12 @@
       const x = e.touches[0].clientX;
       const dx = x - lastX;
 
-      /* 回転方向だけ反転 */
-      rotationZ += dx * 0.6;
+      /*
+        回転方向を前回から反転。
+        前回：rotationZ += dx * 0.6;
+        今回：rotationZ -= dx * 0.6;
+      */
+      rotationZ -= dx * 0.6;
 
       updateRotation();
       lastX = x;
@@ -244,8 +252,10 @@
 
       const dx = e.clientX - lastX;
 
-      /* 回転方向だけ反転 */
-      rotationZ += dx * 0.6;
+      /*
+        PCマウス確認用も同じ方向に反転。
+      */
+      rotationZ -= dx * 0.6;
 
       updateRotation();
       lastX = e.clientX;
